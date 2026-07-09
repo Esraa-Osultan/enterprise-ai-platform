@@ -6,7 +6,7 @@ answer traceable back to the exact file and page it came from. Also
 generates executive summaries and pulls out requirements / action items
 automatically.
 
-This is not "ChatGPT with a PDF" -- it's an engineered platform: modular
+This is not "ChatGPT with a PDF", it's an engineered platform: modular
 code, JWT auth, structured logging, config management, automated tests,
 Docker, and a documented REST API.
 
