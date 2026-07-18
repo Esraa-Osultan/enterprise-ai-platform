@@ -15,21 +15,32 @@ class SearchRequest(BaseModel):
     top_k: int | None = None
 
 
-@router.post("/search")
+class SearchResult(BaseModel):
+    filename: str
+    page: int
+    text: str
+    score: float
+
+
+class SearchResponse(BaseModel):
+    results: list[SearchResult]
+
+
+@router.post("/search", response_model=SearchResponse)
 def search(
     payload: SearchRequest,
     current_user: User = Depends(get_current_user),
     vector_store: VectorStore = Depends(get_vector_store),
 ):
     results = retrieve(payload.query, vector_store, payload.top_k, owner=current_user.username)
-    return {
-        "results": [
-            {
-                "filename": r["filename"],
-                "page": r["page_number"],
-                "text": r["text"],
-                "score": round(r["score"], 4),
-            }
+    return SearchResponse(
+        results=[
+            SearchResult(
+                filename=r["filename"],
+                page=r["page_number"],
+                text=r["text"],
+                score=round(r["score"], 4),
+            )
             for r in results
         ]
-    }
+    )
