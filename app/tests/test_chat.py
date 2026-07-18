@@ -58,6 +58,17 @@ def test_requirements_endpoint_finds_shall_and_must(client, auth_headers):
     assert any("must" in r.lower() for r in requirements)
 
 
+def test_search_with_no_documents_returns_empty_results(client, auth_headers):
+    response = client.post("/search", json={"query": "anything"}, headers=auth_headers)
+    assert response.status_code == 200
+    assert response.json()["results"] == []
+
+
+def test_summary_for_nonexistent_document_returns_404(client, auth_headers):
+    response = client.get("/documents/does-not-exist/summary", headers=auth_headers)
+    assert response.status_code == 404
+
+
 def test_health_check(client):
     response = client.get("/health")
     assert response.status_code == 200

@@ -32,6 +32,27 @@ def test_login_wrong_password_fails(client):
     assert response.status_code == 401
 
 
+def test_register_invalid_email_rejected(client):
+    response = client.post(
+        "/auth/register",
+        json={"username": "erin", "email": "not-an-email", "password": "password1"},
+    )
+    assert response.status_code == 422
+
+
+def test_register_short_password_rejected(client):
+    response = client.post(
+        "/auth/register",
+        json={"username": "frank", "email": "frank@valeo.com", "password": "abc"},
+    )
+    assert response.status_code == 422
+
+
+def test_login_nonexistent_user_fails(client):
+    response = client.post("/auth/login", data={"username": "ghost", "password": "whatever"})
+    assert response.status_code == 401
+
+
 def test_protected_endpoint_requires_token(client):
     response = client.get("/documents")
     assert response.status_code == 401
