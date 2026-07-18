@@ -51,9 +51,9 @@ enterprise-ai-platform/
 │   ├── rag/                  # loader, chunker, embeddings, FAISS store, pipeline
 │   ├── services/             # document_service, analysis_service (summary/requirements)
 │   ├── api/                   # HTTP routers: upload, chat, search, documents, health
-│   └── tests/                 # pytest suite (18 tests)
+│   └── tests/                 # pytest suite (30 tests)
 ├── data/                       # uploads, vector store, users.json, logs (gitignored)
-├── docker/, Dockerfile, docker-compose.yml
+├── Dockerfile, docker-compose.yml, .dockerignore
 ├── scripts/smoke_test.py       # end-to-end smoke test against a live server
 ├── requirements.txt
 └── .env.example
@@ -73,8 +73,10 @@ enterprise-ai-platform/
 - **Pluggable embeddings**: `hash` backend works fully offline (deterministic, zero network calls) for demos/CI; switch to `sentence-transformers` for real semantic embeddings in production (one line in `.env`)
 - **Graceful LLM fallback**: if `OPENAI_API_KEY` is empty, chat/summary/requirements still work using extractive methods instead of failing
 - **Docker + docker-compose**
-- **22 automated tests** covering auth, upload, chat, search, summary, requirements, access control, and per-user document isolation
+- **30 automated tests** covering auth (incl. validation failures), upload (incl. path-traversal and size-limit regressions), chat, search (incl. empty-index edge cases), summary, requirements, access control, and per-user document isolation
 - **Per-user document isolation**: uploads are tagged with their owner, and list/search/chat/summary/requirements/delete are all scoped to the requesting user
+- **Consistent API contracts**: every endpoint declares a Pydantic `response_model` (previously only `/chat` did; `/documents`, `/search`, and `/upload` returned unvalidated bare dicts)
+- **Hardened Docker image**: multi-stage build (build tools never ship in the runtime image), runs as a non-root user, has a `HEALTHCHECK` against `/health`, and never bakes a default `.env`/JWT secret into the image
 - **Swagger UI** at `/docs`
 
 ## Why the embedding fallback exists (an honest engineering note)
@@ -117,9 +119,11 @@ docker-compose up --build
 pytest app/tests/ -v
 ```
 
-22 tests covering: registration/login/duplicate handling, JWT protection
-on every endpoint, file upload + unsupported file rejection, document
-listing/deletion, chat answers with sources, chat with an empty
+30 tests covering: registration/login/duplicate handling + validation
+failures (bad email, short password), JWT protection on every endpoint,
+file upload + unsupported-file rejection + path-traversal-filename
+sanitization + oversized-file rejection + empty-file rejection, document
+listing/deletion, chat answers with sources, chat/search against an empty
 knowledge base, semantic search ranking, summarization, requirement
 extraction, and per-user document isolation.
 
