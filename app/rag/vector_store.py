@@ -116,6 +116,21 @@ class VectorStore:
             self._persist()
             return removed
 
+    def get_chunks(self, doc_id: str, owner: str | None = None) -> list[dict]:
+        """Return every stored chunk for one document, optionally scoped to
+        `owner`. Added so callers (DocumentService) never need to reach
+        into `self.metadata` directly -- every other read path here
+        (search, list_documents, delete_document) is already a method on
+        this class; get_full_text() in DocumentService was the one
+        exception, poking at a "private" list from outside the class that
+        owns it.
+        """
+        return [
+            dict(m)
+            for m in self.metadata
+            if m["doc_id"] == doc_id and (owner is None or m.get("owner") == owner)
+        ]
+
     def list_documents(self, owner: str | None = None) -> list[dict]:
         seen = {}
         for m in self.metadata:

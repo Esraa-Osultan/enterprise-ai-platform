@@ -57,9 +57,7 @@ class DocumentService:
 
         Scoped to `owner` so one user can't pull another user's document
         text by guessing/enumerating doc ids."""
-        chunks = [
-            m for m in self.vector_store.metadata if m["doc_id"] == doc_id and m.get("owner") == owner
-        ]
+        chunks = self.vector_store.get_chunks(doc_id, owner=owner)
         if not chunks:
             raise ValueError(f"No document found with id '{doc_id}'")
         return "\n".join(c["text"] for c in chunks)
