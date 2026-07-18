@@ -3,6 +3,7 @@ import os
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
+from pydantic import BaseModel
 
 from app.api.deps import get_document_service
 from app.auth.dependencies import get_current_user
@@ -22,7 +23,13 @@ ALLOWED_EXTENSIONS = {".pdf", ".docx", ".txt", ".md"}
 MAX_UPLOAD_BYTES = 25 * 1024 * 1024
 
 
-@router.post("/upload")
+class UploadResponse(BaseModel):
+    doc_id: str
+    filename: str
+    num_chunks: int
+
+
+@router.post("/upload", response_model=UploadResponse)
 async def upload_document(
     file: UploadFile,
     current_user: User = Depends(get_current_user),
